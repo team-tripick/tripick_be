@@ -1,29 +1,18 @@
-const { DataTypes } = require('sequelize');
-const sequelize = require('../config/database');
+const mongoose = require('mongoose');
 
-const Logs = sequelize.define(
-  'Logs',
+const logSchema = new mongoose.Schema(
   {
-    title: {
-      type: DataTypes.STRING,
-      allowNull: false,
+    planId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Plan',
+      required: true,
     },
-    log: {
-      type: DataTypes.STRING,
-      allowNull: false,
-    },
-    startDate: {
-      type: DataTypes.STRING,
-      allowNull: false,
-    },
-    endDate: {
-      type: DataTypes.STRING,
-      allowNull: false,
-    },
+    title: { type: String, required: true },
+    log: { type: String, required: true },
+    startDate: { type: String, required: true },
+    endDate: { type: String, required: true },
   },
-  {
-    timestamps: true, //언제 생성되었는지 수정되었는지 저장하게 함
-  }
+  { timestamps: true }
 );
 
-module.exports = Logs;
+module.exports = mongoose.model('Log', logSchema);

@@ -64,13 +64,13 @@ const checkEmailAvailability = async (req, res, next) => {
         .json({ message: '이메일 형식이 잘못 되었습니다.' });
     }
 
-    const existingUser = await User.findOne({ where: { email } });
+    const existingUser = await User.findOne({ email });
 
     if (existingUser) {
-      res.status(409).json({ message: '이미 사용중인 이메일입니다.' });
+      return res.status(409).json({ message: '이미 사용중인 이메일입니다.' });
     }
 
-    return res.status(200).json({ success: existingUser ? false : true });
+    return res.status(200).json({ success: !existingUser });
   } catch (error) {
     next(error);
   }

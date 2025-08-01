@@ -1,10 +1,8 @@
-const { Logs } = require('../models/index');
+const Logs = require('../models/Logs');
 
 const getAllLogs = async (req, res, next) => {
   try {
-    const logs = await Logs.findAll({
-      order: [['createdAt', 'DESC']],
-    });
+    const logs = await Logs.find().sort({ createdAt: -1 });
 
     return res.status(200).json(logs);
   } catch (error) {
@@ -15,7 +13,7 @@ const getAllLogs = async (req, res, next) => {
 const getDetailLogs = async (req, res, next) => {
   const { logId } = req.params;
   try {
-    const log = await Logs.findByPk(logId);
+    const log = await Logs.findById(logId);
     if (!log) {
       return res
         .status(400)
@@ -54,17 +52,18 @@ const patchEditLogs = async (req, res, next) => {
   const { title, log, date } = req.body;
 
   try {
-    const [updated] = await Logs.update(
+    const updated = await Logs.findByIdAndUpdate(
+      logId,
       {
         title,
         log,
         startDate: date.startDate,
         endDate: date.endDate,
       },
-      { where: { id: logId } }
+      { new: true }
     );
 
-    if (updated === 0) {
+    if (!updated) {
       return res.status(404).json({ message: '수정할 일지가 없습니다.' });
     }
 
@@ -78,9 +77,9 @@ const delDetailLogs = async (req, res, next) => {
   const { logId } = req.params;
 
   try {
-    const deleted = await Logs.destroy({ where: { id: logId } });
+    const deleted = await Logs.findByIdAndDelete(logId);
 
-    if (deleted === 0) {
+    if (!deleted) {
       return res.status(404).json({ message: '삭제할 일지가 없습니다.' });
     }
 
