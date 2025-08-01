@@ -1,6 +1,6 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const User = require('../repository/authRepository');
+const User = require('../models/User');
 
 // 회원가입
 const signup = async (req, res, next) => {
@@ -24,7 +24,7 @@ const signup = async (req, res, next) => {
         .json({ message: '비밀번호는 6자 이상이어야 합니다.' });
     }
 
-    const existingUser = await User.findByEmail(email);
+    const existingUser = await User.findOne({ email });
     if (existingUser) {
       return res.status(409).json({ message: '이미 존재하는 이메일 입니다.' });
     }
@@ -53,7 +53,7 @@ const login = async (req, res, next) => {
         .json({ message: '이메일과 비밀번호는 필수값입니다.' });
     }
 
-    const user = await User.findByEmail(email);
+    const user = await User.findOne({ email });
     if (!user) {
       return res.status(404).json({ message: '계정이 존재하지 않습니다.' });
     }
@@ -64,13 +64,13 @@ const login = async (req, res, next) => {
     }
 
     const accessToken = jwt.sign(
-      { id: user.id, email: user.email },
+      { id: user._id, email: user.email },
       process.env.JWT_SECRET,
-      { expiresIn: process.env.JWT_EXPIRES_IN }
+      { expiresIn: process.env.JWT_EXPIRES_IN || '1h' }
     );
 
-    const refreshToken = jwt.sign({ id: user.id }, process.env.JWT_SECRET, {
-      expiresIn: process.env.JWT_REFRESH_EXPIRES_IN,
+    const refreshToken = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
+      expiresIn: process.env.JWT_REFRESH_EXPIRES_IN || '7d',
     });
 
     return res.status(200).json({ accessToken, refreshToken });
@@ -92,7 +92,7 @@ const refresh = async (req, res, next) => {
       return res.status(400).json({ message: '잘못된 형식의 토큰 입니다.' });
     }
 
-    jwt.verify(refreshToken, process.env.JWT_SECRET, (err, decoded) => {
+    jwt.verify(refreshToken, process.env.JWT_SECRET, async (err, decoded) => {
       if (err) {
         if (err.name === 'TokenExpiredError') {
           return res.status(403).json({ message: '토큰이 만료되었습니다.' });
@@ -100,15 +100,27 @@ const refresh = async (req, res, next) => {
         return res.status(403).json({ message: '토큰이 유효하지 않습니다.' });
       }
 
-      const { id, email } = decoded;
+      const { id } = decoded;
 
-      const newAccessToken = jwt.sign({ id, email }, process.env.JWT_SECRET, {
-        expiresIn: process.env.JWT_EXPIRES_IN,
-      });
+      // 사용자 정보 가져오기
+      const user = await User.findById(id);
+      if (!user) {
+        return res.status(404).json({ message: '사용자를 찾을 수 없습니다.' });
+      }
 
-      const newRefreshToken = jwt.sign({ id }, process.env.JWT_SECRET, {
-        expiresIn: process.env.JWT_REFRESH_EXPIRES_IN,
-      });
+      const newAccessToken = jwt.sign(
+        { id: user._id, email: user.email },
+        process.env.JWT_SECRET,
+        { expiresIn: process.env.JWT_EXPIRES_IN || '1h' }
+      );
+
+      const newRefreshToken = jwt.sign(
+        { id: user._id },
+        process.env.JWT_SECRET,
+        {
+          expiresIn: process.env.JWT_REFRESH_EXPIRES_IN || '7d',
+        }
+      );
 
       return res
         .status(200)
