@@ -62,8 +62,8 @@ mongoose
   })
   .then(() => {
     console.log('✅ MongoDB 연결 성공');
-    app.listen(PORT, () => {
-      console.log(`🚀 서버 실행 중: http://localhost:${PORT}`);
+    app.listen(PORT, '0.0.0.0', () => {
+      console.log(`🚀 서버 실행 중: PORT ${PORT}`);
     });
   })
   .catch((err) => {
