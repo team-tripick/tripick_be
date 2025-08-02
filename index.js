@@ -21,9 +21,21 @@ const PORT = process.env.PORT || 3000;
 // ✅ 보안
 app.use(helmet());
 
+const allowedOrigins = [
+  process.env.FRONTEND_URL,
+  'http://localhost:3000',
+];
+
 app.use(
   cors({
-    origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+    origin: function (origin, callback) {
+      if (!origin) return callback(null, true); // Postman 등 서버 직접 호출 허용
+      if (allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error('Not allowed by CORS'));
+      }
+    },
     credentials: true,
   })
 );
