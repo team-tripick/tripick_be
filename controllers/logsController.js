@@ -1,9 +1,9 @@
 const Logs = require('../models/Logs');
+const Counter = require('../service/counter');
 
 const getAllLogs = async (req, res, next) => {
   try {
     const logs = await Logs.find().sort({ createdAt: -1 });
-
     return res.status(200).json(logs);
   } catch (error) {
     next(error);
@@ -13,7 +13,7 @@ const getAllLogs = async (req, res, next) => {
 const getDetailLogs = async (req, res, next) => {
   const { logId } = req.params;
   try {
-    const log = await Logs.findById(logId);
+    const log = await Logs.findOne({ logId: Number(logId) });
     if (!log) {
       return res
         .status(400)
@@ -33,7 +33,14 @@ const postWriteLogs = async (req, res, next) => {
       return res.status(400).json({ message: '필수 값을 모두 입력해주세요.' });
     }
 
+    const counter = await Counter.findOneAndUpdate(
+      { name: 'logId' },
+      { $inc: { seq: 1 } },
+      { new: true, upsert: true }
+    );
+
     await Logs.create({
+      logId: counter.seq,
       title,
       log,
       startDate: date.startDate,
@@ -52,8 +59,8 @@ const patchEditLogs = async (req, res, next) => {
   const { title, log, date } = req.body;
 
   try {
-    const updated = await Logs.findByIdAndUpdate(
-      logId,
+    const updated = await Logs.findOneAndUpdate(
+      { logId: Number(logId) },
       {
         title,
         log,
@@ -77,7 +84,7 @@ const delDetailLogs = async (req, res, next) => {
   const { logId } = req.params;
 
   try {
-    const deleted = await Logs.findByIdAndDelete(logId);
+    const deleted = await Logs.findOneAndDelete({ logId: Number(logId) });
 
     if (!deleted) {
       return res.status(404).json({ message: '삭제할 일지가 없습니다.' });

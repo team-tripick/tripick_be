@@ -7,6 +7,11 @@ const logSchema = new mongoose.Schema(
       ref: 'Plan',
       required: true,
     },
+    logId: {
+      type: Number,
+      unique: true,
+      required: true,
+    },
     title: { type: String, required: true },
     log: { type: String, required: true },
     startDate: { type: String, required: true },
