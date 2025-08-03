@@ -1,12 +1,13 @@
 const Plans = require('../models/Plans');
 const Logs = require('../models/Logs');
+const Counter = require('../service/counter');
 
 const getAllPlans = async (req, res, next) => {
   try {
     const plans = await Plans.find().sort({ createdAt: -1 });
 
     const formattedPlans = plans.map((plan) => ({
-      id: plan._id,
+      id: plan.planId, 
       place: plan.place,
       plan: plan.plan,
       keyword: plan.keyword,
@@ -27,15 +28,14 @@ const getAllPlans = async (req, res, next) => {
 const getDetailPlans = async (req, res, next) => {
   const { planId } = req.params;
   try {
-    const plan = await Plans.findById(planId);
+    const plan = await Plans.findOne({ planId: Number(planId) });
     if (!plan) {
       return res
         .status(400)
         .json({ message: '해당 여행 계획이 존재하지 않습니다.' });
     }
 
-    // 관련 로그들 찾기
-    const logs = await Logs.find({ planId: planId });
+    const logs = await Logs.find({ planId: Number(planId) });
 
     const formattedLogs = logs.map((log) => ({
       ...log.toObject(),
@@ -66,7 +66,14 @@ const postWritePlans = async (req, res, next) => {
       return res.status(400).json({ message: '필수 값을 모두 입력해주세요.' });
     }
 
-    await Plans.create({
+    const counter = await Counter.findOneAndUpdate(
+      { name: 'planId' },
+      { $inc: { seq: 1 } },
+      { new: true, upsert: true }
+    );
+
+    const newPlan = await Plans.create({
+      planId: counter.seq,
       place,
       plan,
       keyword,
@@ -74,7 +81,9 @@ const postWritePlans = async (req, res, next) => {
       endDate: date.endDate,
     });
 
-    return res.status(201).json({ message: '계획 작성이 완료되었습니다.' });
+    return res
+      .status(201)
+      .json({ message: '계획 작성이 완료되었습니다.', planId: newPlan.planId });
   } catch (error) {
     next(error);
   }
@@ -85,8 +94,8 @@ const patchEditPlans = async (req, res, next) => {
   const { place, plan, keyword, date } = req.body;
 
   try {
-    const updated = await Plans.findByIdAndUpdate(
-      planId,
+    const updated = await Plans.findOneAndUpdate(
+      { planId: Number(planId) },
       {
         place,
         plan,
@@ -110,7 +119,7 @@ const patchEditPlans = async (req, res, next) => {
 const delDetailPlans = async (req, res, next) => {
   const { planId } = req.params;
   try {
-    const deleted = await Plans.findByIdAndDelete(planId);
+    const deleted = await Plans.findOneAndDelete({ planId: Number(planId) });
     if (!deleted) {
       return res.status(404).json({ message: '삭제할 계획이 없습니다.' });
     }

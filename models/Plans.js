@@ -7,6 +7,7 @@ const planSchema = new mongoose.Schema(
     keyword: { type: Object, required: true },
     startDate: { type: String, required: true },
     endDate: { type: String, required: true },
+    planId : {type: Number, required: true, unique: true,}
   },
   { timestamps: true }
 );
