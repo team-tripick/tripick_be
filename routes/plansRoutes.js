@@ -13,6 +13,6 @@ router.get('/', verifyToken, getAllPlans);
 router.get('/:planId', verifyToken, getDetailPlans);
 router.delete('/:planId', verifyToken, delDetailPlans);
 router.post('/', verifyToken, postWritePlans);
-router.post('/:planId', verifyToken, patchEditPlans);
+router.patch('/:planId', verifyToken, patchEditPlans);
 
 module.exports = router;
