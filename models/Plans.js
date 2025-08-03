@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 
 const planSchema = new mongoose.Schema(
   {
-    title: { type: String, required: true },
+    place: { type: String, required: true },
     plan: { type: String, required: true },
     keyword: { type: Object, required: true },
     startDate: { type: String, required: true },
