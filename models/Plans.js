@@ -2,6 +2,7 @@ const mongoose = require('mongoose');
 
 const planSchema = new mongoose.Schema(
   {
+    user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
     place: { type: String, required: true },
     plan: { type: String, required: true },
     keyword: { type: Object, required: true },
