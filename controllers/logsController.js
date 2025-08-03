@@ -28,6 +28,7 @@ const getDetailLogs = async (req, res, next) => {
 const postWriteLogs = async (req, res, next) => {
   try {
     const { title, log, date, planId } = req.body;
+    const userId = req.user.id;  
 
     if (!title || !log || !date?.startDate || !date?.endDate || !planId) {
       return res.status(400).json({ message: '필수 값을 모두 입력해주세요.' });
@@ -40,6 +41,7 @@ const postWriteLogs = async (req, res, next) => {
     );
 
     await Logs.create({
+      user: userId,
       logId: counter.seq,
       title,
       log,
