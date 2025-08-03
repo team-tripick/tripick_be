@@ -7,7 +7,8 @@ const getAllPlans = async (req, res, next) => {
     const plans = await Plans.find().sort({ createdAt: -1 });
 
     const formattedPlans = plans.map((plan) => ({
-      id: plan.planId, 
+      id: plan.planId,
+      user: plan.user, 
       place: plan.place,
       plan: plan.plan,
       keyword: plan.keyword,
@@ -61,6 +62,7 @@ const getDetailPlans = async (req, res, next) => {
 const postWritePlans = async (req, res, next) => {
   try {
     const { place, plan, keyword, date } = req.body;
+    const userId = req.user.id;
 
     if (!place || !plan || !keyword || !date?.startDate || !date?.endDate) {
       return res.status(400).json({ message: '필수 값을 모두 입력해주세요.' });
@@ -73,6 +75,7 @@ const postWritePlans = async (req, res, next) => {
     );
 
     const newPlan = await Plans.create({
+      user: userId,
       planId: counter.seq,
       place,
       plan,
