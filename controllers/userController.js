@@ -1,4 +1,6 @@
 const User = require('../models/User');
+const Plans = require('../models/Plans');
+const Logs = require('../models/Logs');
 const jwt = require('jsonwebtoken');
 
 const getMyProfile = async (req, res, next) => {
@@ -34,8 +36,11 @@ const delUser = async (req, res, next) => {
       return res.status(401).json({ message: '잘못된 토큰 형식입니다.' });
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const userId = decoded.id;
 
-    await User.findByIdAndDelete(decoded.id);
+    await Plans.deleteMany({user : userId});
+    await Logs.deleteMany({user : userId});
+    await User.findByIdAndDelete(userId);
     return res.status(200).json({ message: '회원 탈퇴가 완료 되었습니다.' });
   } catch (error) {
     next(error);

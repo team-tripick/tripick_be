@@ -120,6 +120,7 @@ const delDetailPlans = async (req, res, next) => {
   const { planId } = req.params;
   try {
     const deleted = await Plans.findOneAndDelete({ planId: Number(planId) });
+    await Logs.deleteMany({ planId: Number(planId) });
     if (!deleted) {
       return res.status(404).json({ message: '삭제할 계획이 없습니다.' });
     }
