@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 const logSchema = new mongoose.Schema(
   {
     planId: {
-      type: mongoose.Schema.Types.ObjectId,
+      type: Number,
       ref: 'Plan',
       required: true,
     },
