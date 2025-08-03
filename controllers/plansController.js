@@ -7,7 +7,7 @@ const getAllPlans = async (req, res, next) => {
 
     const formattedPlans = plans.map((plan) => ({
       id: plan._id,
-      title: plan.title,
+      place: plan.place,
       plan: plan.plan,
       keyword: plan.keyword,
       createdAt: plan.createdAt
@@ -60,14 +60,14 @@ const getDetailPlans = async (req, res, next) => {
 
 const postWritePlans = async (req, res, next) => {
   try {
-    const { title, plan, keyword, date } = req.body;
+    const { place, plan, keyword, date } = req.body;
 
-    if (!title || !plan || !keyword || !date?.startDate || !date?.endDate) {
+    if (!place || !plan || !keyword || !date?.startDate || !date?.endDate) {
       return res.status(400).json({ message: '필수 값을 모두 입력해주세요.' });
     }
 
     await Plans.create({
-      title,
+      place,
       plan,
       keyword,
       startDate: date.startDate,
@@ -82,13 +82,13 @@ const postWritePlans = async (req, res, next) => {
 
 const patchEditPlans = async (req, res, next) => {
   const { planId } = req.params;
-  const { title, plan, keyword, date } = req.body;
+  const { place, plan, keyword, date } = req.body;
 
   try {
     const updated = await Plans.findByIdAndUpdate(
       planId,
       {
-        title,
+        place,
         plan,
         keyword,
         startDate: date.startDate,
