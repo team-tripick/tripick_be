@@ -13,6 +13,6 @@ router.get('/', verifyToken, getAllLogs);
 router.get('/:logId', verifyToken, getDetailLogs);
 router.delete('/:logId', verifyToken, delDetailLogs);
 router.post('/', verifyToken, postWriteLogs);
-router.post('/:logId', verifyToken, patchEditLogs);
+router.patch('/:logId', verifyToken, patchEditLogs);
 
 module.exports = router;
