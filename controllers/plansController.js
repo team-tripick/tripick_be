@@ -4,20 +4,17 @@ const Counter = require('../service/counter');
 
 const getAllPlans = async (req, res, next) => {
   try {
-    const plans = await Plans.find().sort({ createdAt: -1 });
+    const userId = req.user.id;
+    const plans = await Plans.find({ user: userId }).sort({ createdAt: -1 });
 
     const formattedPlans = plans.map((plan) => ({
       id: plan.planId,
-      user: plan.user, 
+      user: plan.user,
       place: plan.place,
       plan: plan.plan,
       keyword: plan.keyword,
-      createdAt: plan.createdAt
-        ? plan.createdAt.toISOString().split('T')[0]
-        : null,
-      updatedAt: plan.updatedAt
-        ? plan.updatedAt.toISOString().split('T')[0]
-        : null,
+      createdAt: plan.createdAt?.toISOString().split('T')[0] ?? null,
+      updatedAt: plan.updatedAt?.toISOString().split('T')[0] ?? null,
     }));
 
     return res.status(200).json(formattedPlans);
@@ -28,32 +25,23 @@ const getAllPlans = async (req, res, next) => {
 
 const getDetailPlans = async (req, res, next) => {
   const { planId } = req.params;
+  const userId = req.user.id;
+
   try {
-    const plan = await Plans.findOne({ planId: Number(planId) });
+    const plan = await Plans.findOne({ planId: Number(planId), user: userId });
     if (!plan) {
-      return res
-        .status(400)
-        .json({ message: '해당 여행 계획이 존재하지 않습니다.' });
+      return res.status(400).json({ message: '해당 여행 계획이 존재하지 않습니다.' });
     }
 
-    const logs = await Logs.find({ planId: Number(planId) });
+    const logs = await Logs.find({ planId: Number(planId), user: userId });
 
     const formattedLogs = logs.map((log) => ({
       ...log.toObject(),
-      createdAt: log.createdAt
-        ? log.createdAt.toISOString().split('T')[0]
-        : null,
-      updatedAt: log.updatedAt
-        ? log.updatedAt.toISOString().split('T')[0]
-        : null,
+      createdAt: log.createdAt?.toISOString().split('T')[0] ?? null,
+      updatedAt: log.updatedAt?.toISOString().split('T')[0] ?? null,
     }));
 
-    const formattedPlan = {
-      ...plan.toObject(),
-      logs: formattedLogs,
-    };
-
-    return res.status(200).json(formattedPlan);
+    return res.status(200).json({ ...plan.toObject(), logs: formattedLogs });
   } catch (error) {
     next(error);
   }
@@ -84,9 +72,7 @@ const postWritePlans = async (req, res, next) => {
       endDate: date.endDate,
     });
 
-    return res
-      .status(201)
-      .json({ message: '계획 작성이 완료되었습니다.', planId: newPlan.planId });
+    return res.status(201).json({ message: '계획 작성이 완료되었습니다.'});
   } catch (error) {
     next(error);
   }
@@ -95,10 +81,11 @@ const postWritePlans = async (req, res, next) => {
 const patchEditPlans = async (req, res, next) => {
   const { planId } = req.params;
   const { place, plan, keyword, date } = req.body;
+  const userId = req.user.id;
 
   try {
     const updated = await Plans.findOneAndUpdate(
-      { planId: Number(planId) },
+      { planId: Number(planId), user: userId },
       {
         place,
         plan,
@@ -121,12 +108,16 @@ const patchEditPlans = async (req, res, next) => {
 
 const delDetailPlans = async (req, res, next) => {
   const { planId } = req.params;
+  const userId = req.user.id;
+
   try {
-    const deleted = await Plans.findOneAndDelete({ planId: Number(planId) });
-    await Logs.deleteMany({ planId: Number(planId) });
+    const deleted = await Plans.findOneAndDelete({ planId: Number(planId), user: userId });
+    await Logs.deleteMany({ planId: Number(planId), user: userId });
+
     if (!deleted) {
       return res.status(404).json({ message: '삭제할 계획이 없습니다.' });
     }
+
     return res.status(200).json({ message: '삭제가 완료되었습니다.' });
   } catch (error) {
     next(error);
