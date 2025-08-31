@@ -1,9 +1,11 @@
 require('dotenv').config();
 const express = require('express');
+const http = require('http');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const cors = require('cors');
 const mongoose = require('mongoose');
+const setupWebSocket = require('./websocket/index');
 
 // 라우터
 const authRoutes = require('./routes/authRoutes');
@@ -11,12 +13,17 @@ const emailRoutes = require('./routes/emailRoutes');
 const logsRoutes = require('./routes/logsRoutes');
 const plansRoutes = require('./routes/plansRoutes');
 const userRoutes = require('./routes/userRoutes');
+const chatRoutes = require('./routes/chatRoutes');
 
 // 에러 핸들러
 const errorHandler = require('./middleware/errorHandler');
 
 const app = express();
+const server = http.createServer(app);
 const PORT = process.env.PORT || 3000;
+
+// WebSocket 설정
+const io = setupWebSocket(server);
 
 // ✅ 보안
 app.use(helmet());
@@ -55,6 +62,13 @@ app.use('/auth/login', authLimiter);
 
 // ✅ Body 파싱
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+// WebSocket 인스턴스를 req에 추가
+app.use((req, res, next) => {
+  req.io = io;
+  next();
+});
 
 // ✅ 라우터 등록
 app.use('/auth', authRoutes);
@@ -62,9 +76,15 @@ app.use('/email', emailRoutes);
 app.use('/logs', logsRoutes);
 app.use('/plans', plansRoutes);
 app.use('/users', userRoutes);
+app.use('/chat', chatRoutes);
 
 // ✅ 에러 핸들러
 app.use(errorHandler);
+
+// 404 핸들러
+app.use('*', (req, res) => {
+  res.status(404).json({ message: '요청하신 리소스를 찾을 수 없습니다.' });
+});
 
 // ✅ DB 연결 (Mongoose)
 mongoose
@@ -74,11 +94,14 @@ mongoose
   })
   .then(() => {
     console.log('✅ MongoDB 연결 성공');
-    app.listen(PORT, '0.0.0.0', () => {
+    server.listen(PORT, '0.0.0.0', () => {
       console.log(`🚀 서버 실행 중: PORT ${PORT}`);
+      console.log('📡 WebSocket 서버도 함께 실행됨');
     });
   })
   .catch((err) => {
     console.error('❌ MongoDB 연결 실패:', err);
     process.exit(1);
   });
+
+module.exports = app;
