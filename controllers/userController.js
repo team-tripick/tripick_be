@@ -25,6 +25,24 @@ const getMyProfile = async (req, res, next) => {
   }
 };
 
+const userProfileGet = async(req, res, next) => {
+  try {
+    const { userId } = req.params;
+    if (!userId) {
+      return res.status(400).json({ message: 'userId가 존재하지 않습니다.' });
+    }
+
+    const user = await User.findById(userId).select('name email');
+    if (!user) {
+      return res.status(404).json({ message: '사용자를 찾을 수 없습니다.' });
+    }
+
+    return res.status(200).json(user);
+  } catch (error) {
+    next(error);
+  }
+};
+
 const delUser = async (req, res, next) => {
   try {
     const authHeader = req.headers.authorization;
@@ -47,4 +65,4 @@ const delUser = async (req, res, next) => {
   }
 };
 
-module.exports = { delUser, getMyProfile };
+module.exports = { delUser, getMyProfile,userProfileGet };
