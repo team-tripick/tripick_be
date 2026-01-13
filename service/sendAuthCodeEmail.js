@@ -2,7 +2,8 @@ const nodemailer = require('nodemailer');
 
 async function sendAuthCodeEmail(toEmail, code) {
   const transporter = nodemailer.createTransport({
-    service: 'smtp.gmail.com',
+    host: 'smtp.gmail.com',
+    // service: 'gmail',
     port: 465,
     secure: true, 
     auth: {
