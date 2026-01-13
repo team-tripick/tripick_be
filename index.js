@@ -48,6 +48,8 @@ app.use(
   })
 );
 
+app.set('trust proxy', 1); //render 에러 수정
+
 //✅ 요청 제한
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
