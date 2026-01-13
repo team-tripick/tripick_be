@@ -3,11 +3,17 @@ const nodemailer = require('nodemailer');
 async function sendAuthCodeEmail(toEmail, code) {
   const transporter = nodemailer.createTransport({
     service: 'gmail',
+    port: 587,
     secure: false, 
     auth: {
       user: process.env.EMAIL_USER,
       pass: process.env.EMAIL_PASSWORD,
     },
+    tls: {
+      rejectUnauthorized: false
+    },
+    connectionTimeout: 10000,
+    greetingTimeout: 5000,
   });
 
   const mailOptions = {
