@@ -51,17 +51,17 @@ app.use(
 app.set('trust proxy', true); //render 에러 수정
 
 //✅ 요청 제한
-// const limiter = rateLimit({
-//   windowMs: 15 * 60 * 1000,
-//   max: 100,
-// });
-// app.use(limiter);
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 100,
+});
+app.use(limiter);
 
-// const authLimiter = rateLimit({
-//   windowMs: 15 * 60 * 1000,
-//   max: 5,
-// });
-// app.use('/auth/login', authLimiter);
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 5,
+});
+app.use('/auth/login', authLimiter);
 
 // ✅ Body 파싱
 app.use(express.json());
