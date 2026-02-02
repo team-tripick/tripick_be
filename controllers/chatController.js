@@ -78,7 +78,7 @@ const getChatHistory = async (req, res, next) => {
   }
 };
 
-// 채팅 메시지 저장
+// 채팅 메시지 저장 (Socket.io에서 사용)
 const saveMessage = async (senderID, receiverID, message) => {
   try {
     const roomId = generateRoomId(senderID, receiverID);
@@ -90,9 +90,22 @@ const saveMessage = async (senderID, receiverID, message) => {
       roomId
     });
 
-    return await Chat.findById(newMessage._id)
+    const populatedMessage = await Chat.findById(newMessage._id)
       .populate('sender', 'name')
       .populate('receiver', 'name');
+
+    // 클라이언트에서 기대하는 형식으로 변환
+    return {
+      id: populatedMessage._id.toString(),
+      message: populatedMessage.message,
+      senderId: populatedMessage.sender._id.toString(),
+      senderName: populatedMessage.sender.name,
+      receiverId: populatedMessage.receiver._id.toString(),
+      receiverName: populatedMessage.receiver.name,
+      timestamp: populatedMessage.createdAt,
+      isRead: populatedMessage.isRead,
+      roomId: populatedMessage.roomId
+    };
   } catch (error) {
     console.error('메시지 저장 오류:', error);
     throw error;
